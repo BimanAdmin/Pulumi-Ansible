@@ -5,23 +5,11 @@ import { pubsub1id } from "./vpc";
 import { SecGrup } from "./securityGroup";
 import * as path from 'path';
 
-// // Script to create a folder
-// const createFolderScript = `
-// New-Item -Path C:\\Ansible -ItemType Directory
-// `;
 // Get the current directory
 const currentDir = __dirname;
 
 // // Local path to the script.ps1 file
 const localScriptPath = path.join(currentDir,'PULUMI-WINDOWS', 'script.ps1');
-
-// // Copy the script.ps1 file to the Windows EC2 instance
-// const copyFileScript = `
-// Copy-Item -Path ${localScriptPath} -Destination C:\\Ansible -Force
-// `;
-
-// // Run the PowerShell script to create the folder and copy the script file
-// const userData = pulumi.interpolate`<powershell>${createFolderScript}\n${copyFileScript}</powershell>`;
 
 // Script to create a folder and copy script.ps1 file
 const createFolderAndCopyScript = `
