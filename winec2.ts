@@ -59,23 +59,6 @@ const targetGroupAttachment = new aws.lb.TargetGroupAttachment("my-target-group-
     port: 80,
 });
 
-// // Create an ALB listener
-// const listener = new aws.lb.Listener("my-listener", {
-//     loadBalancerArn: alb.arn,
-//     port: 80,
-//     defaultActions: [
-//         {
-//             type: "fixed-response",
-//             fixedResponse: {
-//                 contentType: "text/plain",
-//                 statusCode: "200",
-//                 messageBody: "Hello from ALB!",
-//             },
-//         },
-
-//     ],
-// });
-
 // Create an ALB listener for forwarding to the target group
 const targetGroupListener = new aws.lb.Listener("my-target-group-listener", {
     loadBalancerArn: alb.arn,
