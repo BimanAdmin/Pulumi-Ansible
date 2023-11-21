@@ -12,6 +12,7 @@ const SecurityGroup = new aws.ec2.SecurityGroup(vpcpubsg.publicSubnetIds.subnet1
         { protocol: 'tcp', fromPort: 10051, toPort: 10051, cidrBlocks: ['0.0.0.0/0'] }, // Inbound rule for port 1433
         { protocol: 'tcp', fromPort: 3389, toPort: 3389, cidrBlocks: ['0.0.0.0/0'] },     // Inbound rule for port 22
         { protocol: 'tcp', fromPort: 443, toPort: 443, cidrBlocks: ['0.0.0.0/0'] },
+        { protocol: 'tcp', fromPort: 22, toPort: 22, cidrBlocks: ['0.0.0.0/0'] },
     ],
     egress: [ // Egress rule to allow all outbound traffic
         { protocol: '-1', fromPort: 0, toPort: 0, cidrBlocks: ['0.0.0.0/0'] },
