@@ -1,49 +1,9 @@
 import * as varconfig from "./Config";
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from '@pulumi/aws';
-import { pubsub1id } from "./vpc";
+import { pubsub1id, pubsub2id, vpcId  } from "./vpc";
 import { SecGrup } from "./securityGroup";
-// //import * as path from 'path';
 
-// // // Get the current directory
-// // const currentDir = __dirname;
-
-// // // // Local path to the script.ps1 file
-// // const localScriptPath = path.join(currentDir,'PULUMI-WINDOWS', 'script.ps1');
-
-// Specify the local path to the script.ps1 file
-//const localScriptPath = 'D:\\script\\script.ps1';
-
-// // Script to create a folder and copy script.ps1 file
-// const createFolderAndCopyScript = `
-// Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-// $folderPath = "C:\\Ansible"
-// if (-not (Test-Path $folderPath -PathType Container)) {
-//     New-Item -Path $folderPath -ItemType Directory
-// }
-
-// $scriptPath = "${localScriptPath}"
-// $destinationPath = Join-Path $folderPath "script.ps1"
-// Copy-Item -Path $scriptPath -Destination $destinationPath -Force
-
-// # Provide permissions to read the source file
-// $aclSource = Get-Acl -Path $scriptPath
-// $ruleSource = New-Object System.Security.AccessControl.FileSystemAccessRule("Everyone", "Read", "Allow")
-// $aclSource.SetAccessRule($ruleSource)
-// Set-Acl -Path $scriptPath -AclObject $aclSource
-
-// # Provide permissions to write to the destination folder
-// $aclDestination = Get-Acl -Path $destinationPath
-// $ruleDestination = New-Object System.Security.AccessControl.FileSystemAccessRule("Everyone", "Modify", "Allow")
-// $aclDestination.SetAccessRule($ruleDestination)
-// Set-Acl -Path $destinationPath -AclObject $aclDestination
-
-// `;
-
-
-
-// Run the PowerShell script to create the folder and copy the script file
-//const userData = pulumi.interpolate`<powershell>${createFolderAndCopyScript}</powershell>`;
 
 const instance = new aws.ec2.Instance(varconfig.amzec2keyval.name, {
     ami: varconfig.amzec2keyval.amiid,  // Windows 2019 AMI
@@ -76,7 +36,60 @@ Install-WindowsFeature -Name Web-Server -IncludeManagementTools
 </powershell>`,
 });
 
+// Create an ALB to balance traffic to the instances
+const alb = new aws.lb.LoadBalancer("my-alb", {
+    internal: false,
+    loadBalancerType: "application",
+    securityGroups: [SecGrup], // Specify your ALB security group ID
+    subnets: [pubsub1id, pubsub2id],
+});
+
+// Create a target group for the ALB
+const targetGroup = new aws.lb.TargetGroup("my-target-group", {
+    port: 80,
+    protocol: "HTTP",
+    vpcId: vpcId, // Specify your VPC ID
+    targetType: "instance",
+});
+
+// Attach the EC2 instance to the target group
+const targetGroupAttachment = new aws.lb.TargetGroupAttachment("my-target-group-attachment", {
+    targetGroupArn: targetGroup.arn,
+    targetId: instance.id,
+    port: 80,
+});
+
+// // Create an ALB listener
+// const listener = new aws.lb.Listener("my-listener", {
+//     loadBalancerArn: alb.arn,
+//     port: 80,
+//     defaultActions: [
+//         {
+//             type: "fixed-response",
+//             fixedResponse: {
+//                 contentType: "text/plain",
+//                 statusCode: "200",
+//                 messageBody: "Hello from ALB!",
+//             },
+//         },
+
+//     ],
+// });
+
+// Create an ALB listener for forwarding to the target group
+const targetGroupListener = new aws.lb.Listener("my-target-group-listener", {
+    loadBalancerArn: alb.arn,
+    port: 80,
+    defaultActions: [
+        {
+            type: "forward",
+            targetGroupArn: targetGroup.arn,
+        },
+    ],
+});
+
 export const publicIp = instance.publicIp;
 export const privateIp = instance.privateIp;
-export const publicHostName = instance.publicDns;
+//export const publicHostName = instance.publicDns;
+export const publicHostName = alb.dnsName; // Use the ALB DNS name to access the application
 export const instanceId = instance.id;

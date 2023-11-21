@@ -147,6 +147,7 @@ const ep = new aws.ec2.VpcEndpoint("vpc_ep", {
 export const vpcId = vpc.id;
 export const publicSubnetIds = pulumi.all([subnet1.id, subnet2.id]).apply(ids => ({ subnet1: ids[0], subnet2: ids[1] }));
 export const pubsub1id = subnet1.id;
+export const pubsub2id = subnet2.id;
 export const privateSubnetIds = pulumi.all([subnet3.id, subnet4.id]).apply(ids => ({ subnet3: ids[0], subnet4: ids[1] }));
 export const natGatewayId = natGateway.id;
 export const vpcEndpointId = ep.id;
