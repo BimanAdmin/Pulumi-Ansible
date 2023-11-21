@@ -4,58 +4,50 @@ import * as aws from '@pulumi/aws';
 import { pubsub1id } from "./vpc";
 import { SecGrup } from "./securityGroup";
 
-// Configure the user data to install IIS and a default application
-// const userData = pulumi.interpolate`<powershell>
-//     # Install IIS
-//     Install-WindowsFeature -name Web-Server -IncludeManagementTools -Force
+// Script to create a folder
+const createFolderScript = `
+New-Item -Path C:\\Ansible -ItemType Directory
+`;
 
-//     # Create a default HTML file for the IIS default site
-//     @"
-//     <html>
-//         <head>
-//             <title>Welcome to Pulumi IIS</title>
-//         </head>
-//         <body>
-//             <h1>Hello from Pulumi and IIS!</h1>
-//             <p>This is a default application deployed using Pulumi.</p>
-//         </body>
-//     </html>
-// "@" | Out-File -FilePath C:\\inetpub\\wwwroot\\index.html -Encoding UTF8
+// Local path to the script.ps1 file
+const localScriptPath = "./script.ps1";
 
-//     # Restart IIS
-//     Restart-Service W3SVC
-// </powershell>
-// `;
+// Copy the script.ps1 file to the Windows EC2 instance
+const copyFileScript = `
+Copy-Item -Path ${localScriptPath} -Destination C:\\Ansible -Force
+`;
 
+// Local path to the script.ps1 file
+//const localScriptPath = pulumi.interpolate`${pulumi.getStack() === "dev" ? "." : ".."}/script.ps1`;
+
+// Copy the script.ps1 file to the Windows EC2 instance
+//const copyScriptCommand = `Copy-Item -Path "${localScriptPath}" -Destination "C:\\Ansible\\script.ps1"`;
+
+// Run the PowerShell script to create the folder and copy the script file
+const userData = pulumi.interpolate`<powershell>${createFolderScript}\n${copyFileScript}</powershell>`;
 
 
+// Run the PowerShell script to create the folder and copy the script file
+//const runScriptUserData = pulumi.interpolate`<powershell>${createFolderScript}${copyScriptCommand}</powershell>`;
 
 const instance = new aws.ec2.Instance(varconfig.amzec2keyval.name, {
-    ami: varconfig.amzec2keyval.amiid,  // Amazon Linux 2 AMI
+    ami: varconfig.amzec2keyval.amiid,  // Windows 2019 AMI
     instanceType: varconfig.amzec2keyval.instancetype,  // Choose an appropriate instance type
     subnetId: pubsub1id,
     securityGroups: [SecGrup],
     keyName: varconfig.amzec2keyval.keypairname,  // Replace with your SSH key name
     associatePublicIpAddress: true,
-   
-    // privateIp:varconfig.amzec2keyval.privateip,
+    //userData: runScriptUserData,
+    userData: userData,
+
     tags: {
-        Name: varconfig.amzec2keyval.name,
+        Name: "WindowsInstanceWithScript",
     },
-
-    userData: pulumi.interpolate `#cloud-config
-        runcmd:
-          - powershell.exe Add-WindowsFeature Web-Server
-
-//     # Install IIS
-//     Install-WindowsFeature -name Web-Server -IncludeManagementTools -Force
-
-//     # Restart IIS
-//     Restart-Service W3SVC
-// </powershell>`,
-    
 });
 
 export const publicIp = instance.publicIp;
 export const privateIp = instance.privateIp;
 export const publicHostName = instance.publicDns;
+
+
+export const instanceId = instance.id;

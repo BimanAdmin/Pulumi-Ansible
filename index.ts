@@ -1,6 +1,7 @@
 import * as machineec2 from "./winec2"
 import * as vpc from "./vpc";
 
+
 export const publicIp = machineec2.publicIp;
 export const privateIp = machineec2.privateIp;
 export const publicHostName = machineec2.publicHostName
