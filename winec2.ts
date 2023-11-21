@@ -19,12 +19,14 @@ if (-not (Test-Path $folderPath -PathType Container)) {
 }
 
 $scriptPath = "${localScriptPath}"
-$destinationPath = Join-Path $folderPath (Split-Path $scriptPath -Leaf)
+$destinationPath = Join-Path $folderPath "script.ps1"
 Copy-Item -Path $scriptPath -Destination $destinationPath -Force
 `;
 
 // Run the PowerShell script to create the folder and copy the script file
 const userData = pulumi.interpolate`<powershell>${createFolderAndCopyScript}</powershell>`;
+
+
 
 
 const instance = new aws.ec2.Instance(varconfig.amzec2keyval.name, {
@@ -43,6 +45,5 @@ const instance = new aws.ec2.Instance(varconfig.amzec2keyval.name, {
 export const publicIp = instance.publicIp;
 export const privateIp = instance.privateIp;
 export const publicHostName = instance.publicDns;
-
 
 export const instanceId = instance.id;
