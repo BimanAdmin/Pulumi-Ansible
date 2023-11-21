@@ -60,8 +60,19 @@ const instance = new aws.ec2.Instance(varconfig.amzec2keyval.name, {
 # Install IIS Web Server
 Install-WindowsFeature -Name Web-Server -IncludeManagementTools
 
-# Install Ansible
-Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1'))
+# Create a custom HTML file
+@"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Custom Page</title>
+</head>
+<body>
+    <h1>Hello from Pulumi and IIS!</h1>
+</body>
+</html>
+"@ | Out-File -FilePath "C:\\inetpub\\wwwroot\\index.html" -Encoding utf8
+
 </powershell>`,
 });
 
